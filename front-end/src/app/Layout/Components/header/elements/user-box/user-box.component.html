@@ -1,0 +1,53 @@
+<div class="header-btn-lg d-flex align-items-center">
+  <div class="widget-content-left me-2">
+    <div class="widget-heading">ABC</div>
+    <div class="widget-subheading">Admin</div>
+  </div>
+  <div ngbDropdown placement="bottom-right">
+    <button style="width: 42px; height: 42px;" type="button" class="btn btn-link p-0" ngbDropdownToggle>
+      <img style="width: 100%; height: 100%; object-fit: cover;" src="/assets/images/avatars/1.jpg" alt="" class="rounded-circle">
+    </button>
+    <div ngbDropdownMenu class="dropdown-menu-sm">
+      <div class="dropdown-header text-center">
+        <div class="d-flex justify-content-center">
+          <div style="width: 60px; height: 60px;"> 
+            <img src="/assets/images/avatars/1.jpg" alt="Avatar" class="rounded-circle mb-2" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+        </div>
+        <h6 class="mb-0">{{infoUser ? infoUser.fullName : ''}}</h6>
+        <small class="text-muted">{{infoUser ? infoUser.email : ''}}</small>
+      </div>
+      <!-- <div href="https://thienphat-checkin.store" class="dropdown-item" style="cursor: pointer;">
+        <a rel="stylesheet" href="https://thienphat-checkin.store" target="_blank"> <i class="pe-7s-bell me-2"></i> Chấm công</a>
+       
+      </div>
+      <div class="dropdown-divider"></div>
+      <div href="#" class="dropdown-item" style="cursor: pointer;" (click)="changePassword()">
+        <i class="pe-7s-user me-2"></i>
+        Đổi mật khẩu
+      </div> -->
+      <!-- <a href="#" class="dropdown-item">
+        <i class="pe-7s-user me-2"></i>
+        My Profile
+      </a>
+      <a href="#" class="dropdown-item">
+        <i class="pe-7s-settings me-2"></i>
+        Settings
+      </a>
+      <a href="#" class="dropdown-item d-flex align-items-center">
+        <i class="pe-7s-bell me-2"></i>
+        Notifications
+        <span class="badge bg-warning text-dark ms-auto">3</span>
+      </a>
+      <div class="dropdown-divider"></div>
+      <a href="#" class="dropdown-item">
+        <i class="pe-7s-help1 me-2"></i>
+        Help
+      </a> -->
+      <a href="login" class="dropdown-item text-danger">
+        <i class="pe-7s-power me-2"></i>
+        Đăng xuất
+      </a>
+    </div>
+  </div>
+</div>

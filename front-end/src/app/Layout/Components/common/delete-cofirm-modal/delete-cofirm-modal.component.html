@@ -1,0 +1,12 @@
+<div class="modal-header bg-danger">
+  <h4 class="modal-title text-white">Xác nhận xóa!</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="closeModal(false)">
+  </button>
+</div>
+<div class="modal-body">
+  Bạn có muốn xóa bản ghi này?
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="closeModal(false)">Hủy</button>
+  <button type="button" class="btn btn-danger" (click)="closeModal(true)">Xác nhận</button>
+</div>

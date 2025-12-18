@@ -1,0 +1,24 @@
+<!-- <div *ngFor="let toast of toastService.toasts" class="toast show align-items-center text-white border-0 {{toast.className}}" role="alert" aria-live="assertive" aria-atomic="true" data-autohide="true"
+     [style.animationDuration]="toast.delay ? toast.delay + 'ms' : '2000ms'">
+
+  <div class="d-flex">
+    <div class="toast-body">
+      <div *ngIf="toast.header">{{ toast.header }}:</div>
+      <div>
+        {{ toast.body }}
+      </div>
+    </div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" aria-label="Close"
+            (click)="toastService.remove(toast)"></button>
+  </div>
+</div> -->
+<div *ngFor="let toast of toastService.toasts" role="alert" aria-live="assertive" aria-atomic="true" class="toast" data-autohide="true" class="toast show align-items-center text-white border-0 {{toast.className}}">
+  <div class="toast-header">
+    <strong class="mr-auto" *ngIf="toast.header">{{ toast.header }}</strong>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" aria-label="Close"
+            (click)="toastService.remove(toast)"></button>
+  </div>
+  <div class="toast-body">
+    {{ toast.body }}
+  </div>
+</div>
