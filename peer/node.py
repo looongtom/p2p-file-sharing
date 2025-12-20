@@ -6,6 +6,7 @@ import socket
 import threading
 import base64
 import hashlib
+import shutil
 from typing import Dict, Any, Tuple, Optional
 from functools import wraps
 from flask import Flask, request, jsonify, Response
@@ -593,11 +594,58 @@ class Node:
         @app.route('/api/torrent/send', methods=['POST'])
         @requires_auth
         def api_send():
-            """Share a file (seed) - requires Basic Auth"""
+            """Share a file (seed) - requires Basic Auth
+            Accepts either:
+            - File upload via multipart/form-data with 'file' field
+            - JSON with 'filename' field (for existing files in seed directory)
+            """
+            # Check if file was uploaded
+            if 'file' in request.files:
+                uploaded_file = request.files['file']
+                if uploaded_file.filename == '':
+                    return jsonify({"ok": False, "error": "No file selected"}), 400
+                
+                filename = uploaded_file.filename
+                
+                # Save uploaded file to download_dir first
+                download_path = os.path.join("/app", self.download_dir, filename)
+                os.makedirs(os.path.dirname(download_path), exist_ok=True)
+                
+                try:
+                    uploaded_file.save(download_path)
+                    self._log(f"File uploaded to download_dir: {filename}")
+                except Exception as e:
+                    self._log(f"Failed to save uploaded file: {e}")
+                    return jsonify({"ok": False, "error": f"Failed to save uploaded file: {str(e)}"}), 500
+                
+                # Copy file from download_dir to seed_dir for seeding
+                seed_path = os.path.join("/app", self.seed_dir, filename)
+                os.makedirs(os.path.dirname(seed_path), exist_ok=True)
+                
+                try:
+                    shutil.copy2(download_path, seed_path)
+                    self._log(f"File copied to seed_dir: {filename}")
+                except Exception as e:
+                    self._log(f"Failed to copy file to seed_dir: {e}")
+                    return jsonify({"ok": False, "error": f"Failed to copy file to seed directory: {str(e)}"}), 500
+                
+                # Use existing logic to share the file
+                success = self.own_file(filename)
+                if success:
+                    return jsonify({
+                        "ok": True, 
+                        "message": f"File {filename} uploaded and is now being shared",
+                        "filename": filename,
+                        "size": os.path.getsize(seed_path)
+                    })
+                else:
+                    return jsonify({"ok": False, "error": f"Failed to share file {filename}"}), 500
+            
+            # Fallback to original behavior: use filename from JSON
             data = request.get_json() or {}
             filename = data.get('filename')
             if not filename:
-                return jsonify({"ok": False, "error": "filename is required"}), 400
+                return jsonify({"ok": False, "error": "Either 'file' upload or 'filename' in JSON is required"}), 400
             
             success = self.own_file(filename)
             if success:

@@ -94,13 +94,35 @@ curl -X POST http://localhost:5001/api/login \
 
 **POST** `/api/torrent/send` ⚠️ **Requires Basic Auth**
 
-Share a file from the node's seed directory.
+Share a file by either:
+1. **Uploading a file** (multipart/form-data) - File is saved to download_dir, then copied to seed_dir and shared
+2. **Using existing file** (JSON) - Share a file that already exists in the seed directory
 
-### 1. Share a File (Seed)
+**Option 1: Upload a file (multipart/form-data)**
 
-**POST** `/api/torrent/send`
+**Request:**
+- Content-Type: `multipart/form-data`
+- Field name: `file`
+- Include Basic Auth credentials
 
-Share a file from the node's seed directory.
+**Response:**
+```json
+{
+  "ok": true,
+  "message": "File Xshell5.rar uploaded and is now being shared",
+  "filename": "Xshell5.rar",
+  "size": 12345678
+}
+```
+
+**Example (file upload):**
+```bash
+curl -X POST http://localhost:5001/api/torrent/send \
+  -u myuser:mypassword123 \
+  -F "file=@/path/to/Xshell5.rar"
+```
+
+**Option 2: Share existing file (JSON)**
 
 **Request Body:**
 ```json
@@ -117,13 +139,15 @@ Share a file from the node's seed directory.
 }
 ```
 
-**Example:**
+**Example (existing file):**
 ```bash
 curl -X POST http://localhost:5001/api/torrent/send \
   -u myuser:mypassword123 \
   -H "Content-Type: application/json" \
   -d '{"filename": "Xshell5.rar"}'
 ```
+
+**Note:** When uploading a file, it is first saved to the `download_dir`, then copied to `seed_dir` for sharing.
 
 ---
 
@@ -306,7 +330,12 @@ curl -X POST http://localhost:5001/api/login \
 # List files
 curl -u myuser:mypassword123 http://localhost:5001/api/torrent/list
 
-# Share a file
+# Upload and share a file
+curl -X POST http://localhost:5001/api/torrent/send \
+  -u myuser:mypassword123 \
+  -F "file=@/path/to/Xshell5.rar"
+
+# Or share an existing file in seed directory
 curl -X POST http://localhost:5001/api/torrent/send \
   -u myuser:mypassword123 \
   -H "Content-Type: application/json" \
