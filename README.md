@@ -1,50 +1,148 @@
-# BitTorrent P2P (Docker demo with real transfer)
+P2P File Sharing (BitTorrent-like Core)
+Giới thiệu
 
-## Run
-From `docker/`:
+Dự án mô phỏng hệ thống chia sẻ file ngang hàng (P2P) theo mô hình BitTorrent rút gọn, phục vụ học tập và demo kỹ thuật.
 
-```bash
+Hệ thống gồm:
+
+Tracker: quản lý metadata và danh sách peer
+
+Peer: vừa chia sẻ file vừa tải file
+
+Giao tiếp nội bộ qua Docker network
+
+Tính năng
+
+Chia sẻ file theo mô hình tracker – peer
+
+Chia file thành piece 256KB
+
+Download song song từ nhiều peer
+
+Kiểm tra hash từng piece
+
+Resume download
+
+Log quá trình download theo từng piece
+
+Triển khai nhanh bằng Docker
+
+Triển khai bằng Docker
+1. Yêu cầu
+
+Docker Desktop
+
+Docker Compose
+
+2. Chuẩn bị dữ liệu seed & download
+
+Cấu trúc thư mục trên host:
+
+data/
+├── peer1/
+│   ├── node_files/     # file để seed
+│   └── downloads/      # file tải về
+├── peer2/
+│   ├── node_files/
+│   └── downloads/
+└── peer3/
+    ├── node_files/
+    └── downloads/
+
+
+Ví dụ: peer1 chia sẻ file Xshell.rar:
+
+data/peer1/node_files/Xshell.rar
+
+3. Build & khởi động hệ thống
+cd docker
 docker compose up --build
-```
 
-## Seed a file (on host)
-Create file on host:
 
-- `data/peer1/node_files/demo.txt`
+Các container được khởi động:
 
-## Announce seed on peer1
-Attach peer1:
+bt-tracker
 
-```bash
+bt-peer1
+
+bt-peer2
+
+bt-peer3 (nếu cấu hình)
+
+Cách chạy và thao tác
+1. Attach vào peer
+
+Sử dụng docker attach để thao tác trực tiếp trong peer:
+
 docker attach bt-peer1
-```
 
-Type:
 
-```text
-torrent -setMode send demo.txt
-```
+Thoát attach mà không dừng container:
 
-Detach without stopping: `Ctrl+P` then `Ctrl+Q`.
+Ctrl + P  →  Ctrl + Q
 
-## Download on peer2
-Attach peer2:
+2. Chia sẻ file (seed)
 
-```bash
-docker attach bt-peer2
-```
+Trong peer có file ở node_files/:
 
-Type:
+torrent -setMode send Xshell.rar
 
-```text
-torrent -setMode download demo.txt
-```
 
-## Where is the downloaded file?
-On host:
+Peer sẽ:
 
-- `data/peer2/downloads/demo.txt`
+đọc file
 
-Inside container:
+tạo metadata & piece hash
 
-- `/app/downloads/demo.txt`
+đăng ký file với tracker
+
+3. Xem danh sách file trên mạng P2P
+torrent list
+
+
+Tracker trả về danh sách file hiện có trên mạng.
+
+4. Download file theo tên
+torrent -setMode download Xshell.rar
+
+
+Cơ chế download:
+
+tracker trả về danh sách peer đang giữ file
+
+file được chia thành các piece 256KB
+
+các piece được tải song song từ nhiều peer
+
+mỗi piece được kiểm tra hash trước khi ghi xuống file
+
+5. File tải về ở đâu?
+
+Trong container:
+
+/app/downloads/
+
+
+Trên host:
+
+data/peerX/downloads/
+
+
+Trong quá trình tải:
+
+filename.part
+
+filename.resume.json
+
+Khi hoàn tất, file sẽ được ghép thành file hoàn chỉnh.
+
+6. Dừng hệ thống
+docker compose down
+
+Ghi chú
+
+Người dùng chỉ thao tác theo tên file
+
+Nếu nhiều peer cùng chia sẻ một file, hệ thống tự động tải song song từ nhiều peer
+
+Resume download hoạt động tự động khi tải lại
