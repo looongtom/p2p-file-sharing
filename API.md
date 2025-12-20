@@ -1,32 +1,32 @@
-# P2P File Sharing API Documentation
+# Tài liệu API Chia sẻ File P2P
 
-The peer nodes now expose a Flask REST API instead of an interactive command-line interface.
+Các nút peer hiện cung cấp Flask REST API thay vì giao diện dòng lệnh tương tác.
 
 ## Base URL
 
-Each peer exposes its API on port 5000 inside the container. The ports are mapped as follows:
+Mỗi peer cung cấp API trên cổng 5000 bên trong container. Các cổng được ánh xạ như sau:
 - **peer1**: `http://localhost:5001`
 - **peer2**: `http://localhost:5002`
 - **peer3**: `http://localhost:5003`
 
-## Authentication
+## Xác thực
 
-The API uses **HTTP Basic Authentication**. Most endpoints require authentication, except:
-- `/api/register` - User registration (no auth required)
-- `/api/login` - Login endpoint (uses Basic Auth to verify credentials)
-- `/health` - Health check (no auth required)
+API sử dụng **HTTP Basic Authentication**. Hầu hết các endpoint yêu cầu xác thực, ngoại trừ:
+- `/api/register` - Đăng ký người dùng (không yêu cầu xác thực)
+- `/api/login` - Endpoint đăng nhập (sử dụng Basic Auth để xác minh thông tin đăng nhập)
+- `/health` - Kiểm tra sức khỏe (không yêu cầu xác thực)
 
-**All other endpoints require Basic Auth** with valid username and password.
+**Tất cả các endpoint khác yêu cầu Basic Auth** với tên người dùng và mật khẩu hợp lệ.
 
-To use Basic Auth with curl, use the `-u username:password` flag or include the `Authorization` header.
+Để sử dụng Basic Auth với curl, sử dụng cờ `-u username:password` hoặc bao gồm header `Authorization`.
 
 ## Endpoints
 
-### 1. Register User (First-time Registration)
+### 1. Đăng ký Người dùng (Đăng ký lần đầu)
 
 **POST** `/api/register`
 
-Register a new user account. This endpoint does not require authentication.
+Đăng ký tài khoản người dùng mới. Endpoint này không yêu cầu xác thực.
 
 **Request Body:**
 ```json
@@ -44,31 +44,31 @@ Register a new user account. This endpoint does not require authentication.
 }
 ```
 
-**Example:**
+**Ví dụ:**
 ```bash
 curl -X POST http://localhost:5001/api/register \
   -H "Content-Type: application/json" \
   -d '{"username": "myuser", "password": "mypassword123"}'
 ```
 
-**Error Responses:**
-- `400` - Missing username or password, or validation failed
-- `409` - Username already exists
+**Phản hồi Lỗi:**
+- `400` - Thiếu tên người dùng hoặc mật khẩu, hoặc xác thực thất bại
+- `409` - Tên người dùng đã tồn tại
 
-**Validation Rules:**
-- Username must be at least 3 characters
-- Password must be at least 6 characters
+**Quy tắc Xác thực:**
+- Tên người dùng phải có ít nhất 3 ký tự
+- Mật khẩu phải có ít nhất 6 ký tự
 
 ---
 
-### 2. Login
+### 2. Đăng nhập
 
 **POST** `/api/login`
 
-Login using Basic Auth to verify credentials. This endpoint uses Basic Auth to authenticate.
+Đăng nhập bằng Basic Auth để xác minh thông tin đăng nhập. Endpoint này sử dụng Basic Auth để xác thực.
 
 **Request:**
-Include Basic Auth header with username and password.
+Bao gồm header Basic Auth với tên người dùng và mật khẩu.
 
 **Response:**
 ```json
@@ -79,31 +79,31 @@ Include Basic Auth header with username and password.
 }
 ```
 
-**Example:**
+**Ví dụ:**
 ```bash
 curl -X POST http://localhost:5001/api/login \
   -u myuser:mypassword123
 ```
 
-**Error Responses:**
-- `401` - Invalid username or password
+**Phản hồi Lỗi:**
+- `401` - Tên người dùng hoặc mật khẩu không hợp lệ
 
 ---
 
-### 3. Share a File (Seed)
+### 3. Chia sẻ File (Seed)
 
-**POST** `/api/torrent/send` ⚠️ **Requires Basic Auth**
+**POST** `/api/torrent/send` ⚠️ **Yêu cầu Basic Auth**
 
-Share a file by either:
-1. **Uploading a file** (multipart/form-data) - File is saved to download_dir, then copied to seed_dir and shared
-2. **Using existing file** (JSON) - Share a file that already exists in the seed directory
+Chia sẻ file bằng cách:
+1. **Tải file lên** (multipart/form-data) - File được lưu vào download_dir, sau đó sao chép vào seed_dir và chia sẻ
+2. **Sử dụng file hiện có** (JSON) - Chia sẻ file đã tồn tại trong thư mục seed
 
-**Option 1: Upload a file (multipart/form-data)**
+**Tùy chọn 1: Tải file lên (multipart/form-data)**
 
 **Request:**
 - Content-Type: `multipart/form-data`
-- Field name: `file`
-- Include Basic Auth credentials
+- Tên trường: `file`
+- Bao gồm thông tin đăng nhập Basic Auth
 
 **Response:**
 ```json
@@ -115,14 +115,14 @@ Share a file by either:
 }
 ```
 
-**Example (file upload):**
+**Ví dụ (tải file lên):**
 ```bash
 curl -X POST http://localhost:5001/api/torrent/send \
   -u myuser:mypassword123 \
   -F "file=@/path/to/Xshell5.rar"
 ```
 
-**Option 2: Share existing file (JSON)**
+**Tùy chọn 2: Chia sẻ file hiện có (JSON)**
 
 **Request Body:**
 ```json
@@ -139,7 +139,7 @@ curl -X POST http://localhost:5001/api/torrent/send \
 }
 ```
 
-**Example (existing file):**
+**Ví dụ (file hiện có):**
 ```bash
 curl -X POST http://localhost:5001/api/torrent/send \
   -u myuser:mypassword123 \
@@ -147,15 +147,15 @@ curl -X POST http://localhost:5001/api/torrent/send \
   -d '{"filename": "Xshell5.rar"}'
 ```
 
-**Note:** When uploading a file, it is first saved to the `download_dir`, then copied to `seed_dir` for sharing.
+**Lưu ý:** Khi tải file lên, file được lưu vào `download_dir` trước, sau đó sao chép vào `seed_dir` để chia sẻ.
 
 ---
 
-### 4. List Files on Tracker
+### 4. Liệt kê File trên Tracker
 
-**GET** `/api/torrent/list` ⚠️ **Requires Basic Auth**
+**GET** `/api/torrent/list` ⚠️ **Yêu cầu Basic Auth**
 
-Get a list of all files available on the tracker.
+Lấy danh sách tất cả các file có sẵn trên tracker.
 
 **Response:**
 ```json
@@ -173,27 +173,27 @@ Get a list of all files available on the tracker.
 }
 ```
 
-**Example:**
+**Ví dụ:**
 ```bash
 curl -u myuser:mypassword123 http://localhost:5001/api/torrent/list
 ```
 
 ---
 
-### 5. Download a File
+### 5. Tải File
 
-**POST** `/api/torrent/download` ⚠️ **Requires Basic Auth**
+**POST** `/api/torrent/download` ⚠️ **Yêu cầu Basic Auth**
 
-Download a file by filename or infohash. The download runs asynchronously in the background.
+Tải file theo tên file hoặc infohash. Quá trình tải chạy bất đồng bộ trong nền.
 
-**Request Body (by filename):**
+**Request Body (theo tên file):**
 ```json
 {
   "filename": "Xshell5.rar"
 }
 ```
 
-**Request Body (by infohash):**
+**Request Body (theo infohash):**
 ```json
 {
   "infohash": "a1b2c3d4e5f6..."
@@ -208,7 +208,7 @@ Download a file by filename or infohash. The download runs asynchronously in the
 }
 ```
 
-**Example:**
+**Ví dụ:**
 ```bash
 curl -X POST http://localhost:5001/api/torrent/download \
   -u myuser:mypassword123 \
@@ -218,11 +218,11 @@ curl -X POST http://localhost:5001/api/torrent/download \
 
 ---
 
-### 6. Get Node Status
+### 6. Lấy Trạng thái Node
 
-**GET** `/api/status` ⚠️ **Requires Basic Auth**
+**GET** `/api/status` ⚠️ **Yêu cầu Basic Auth**
 
-Get the current status of the node, including active downloads and seeding information.
+Lấy trạng thái hiện tại của node, bao gồm thông tin tải xuống đang hoạt động và seeding.
 
 **Response:**
 ```json
@@ -242,18 +242,18 @@ Get the current status of the node, including active downloads and seeding infor
 }
 ```
 
-**Example:**
+**Ví dụ:**
 ```bash
 curl -u myuser:mypassword123 http://localhost:5001/api/status
 ```
 
 ---
 
-### 7. Exit Gracefully
+### 7. Thoát An toàn
 
-**POST** `/api/exit` ⚠️ **Requires Basic Auth**
+**POST** `/api/exit` ⚠️ **Yêu cầu Basic Auth**
 
-Notify the tracker about all active downloads before exiting. This sends exit signals for all downloads.
+Thông báo cho tracker về tất cả các tải xuống đang hoạt động trước khi thoát. Điều này gửi tín hiệu thoát cho tất cả các tải xuống.
 
 **Response:**
 ```json
@@ -263,7 +263,7 @@ Notify the tracker about all active downloads before exiting. This sends exit si
 }
 ```
 
-**Example:**
+**Ví dụ:**
 ```bash
 curl -X POST http://localhost:5001/api/exit \
   -u myuser:mypassword123
@@ -271,11 +271,11 @@ curl -X POST http://localhost:5001/api/exit \
 
 ---
 
-### 8. Health Check
+### 8. Kiểm tra Sức khỏe
 
 **GET** `/health`
 
-Simple health check endpoint.
+Endpoint kiểm tra sức khỏe đơn giản.
 
 **Response:**
 ```json
@@ -285,24 +285,24 @@ Simple health check endpoint.
 }
 ```
 
-**Example:**
+**Ví dụ:**
 ```bash
 curl http://localhost:5001/health
 ```
 
 ---
 
-## Error Responses
+## Phản hồi Lỗi
 
-All endpoints return standard HTTP status codes:
-- `200` - Success
-- `400` - Bad Request (missing or invalid parameters)
-- `401` - Unauthorized (authentication required or invalid credentials)
-- `404` - Not Found (file not found)
-- `409` - Conflict (username already exists)
-- `500` - Internal Server Error
+Tất cả các endpoint trả về mã trạng thái HTTP tiêu chuẩn:
+- `200` - Thành công
+- `400` - Yêu cầu không hợp lệ (thiếu hoặc tham số không hợp lệ)
+- `401` - Không được phép (yêu cầu xác thực hoặc thông tin đăng nhập không hợp lệ)
+- `404` - Không tìm thấy (file không tồn tại)
+- `409` - Xung đột (tên người dùng đã tồn tại)
+- `500` - Lỗi máy chủ nội bộ
 
-Error response format:
+Định dạng phản hồi lỗi:
 ```json
 {
   "ok": false,
@@ -310,48 +310,47 @@ Error response format:
 }
 ```
 
-## Quick Start Guide
+## Hướng dẫn Bắt đầu Nhanh
 
-1. **Register a new user:**
+1. **Đăng ký người dùng mới:**
 ```bash
 curl -X POST http://localhost:5001/api/register \
   -H "Content-Type: application/json" \
   -d '{"username": "myuser", "password": "mypassword123"}'
 ```
 
-2. **Login to verify credentials:**
+2. **Đăng nhập để xác minh thông tin đăng nhập:**
 ```bash
 curl -X POST http://localhost:5001/api/login \
   -u myuser:mypassword123
 ```
 
-3. **Use authenticated endpoints:**
+3. **Sử dụng các endpoint được xác thực:**
 ```bash
-# List files
+# Liệt kê file
 curl -u myuser:mypassword123 http://localhost:5001/api/torrent/list
 
-# Upload and share a file
+# Tải lên và chia sẻ file
 curl -X POST http://localhost:5001/api/torrent/send \
   -u myuser:mypassword123 \
   -F "file=@/path/to/Xshell5.rar"
 
-# Or share an existing file in seed directory
+# Hoặc chia sẻ file hiện có trong thư mục seed
 curl -X POST http://localhost:5001/api/torrent/send \
   -u myuser:mypassword123 \
   -H "Content-Type: application/json" \
   -d '{"filename": "Xshell5.rar"}'
 
-# Download a file
+# Tải file
 curl -X POST http://localhost:5001/api/torrent/download \
   -u myuser:mypassword123 \
   -H "Content-Type: application/json" \
   -d '{"filename": "Xshell5.rar"}'
 ```
 
-## Notes
+## Lưu ý
 
-- User credentials are stored in `/app/users.json` inside each peer container
-- Passwords are hashed using SHA256
-- Each peer maintains its own user database (users are not shared between peers)
-- Basic Auth credentials must be provided with each API call to protected endpoints
-
+- Thông tin đăng nhập người dùng được lưu trong `/app/users.json` bên trong mỗi container peer
+- Mật khẩu được băm bằng SHA256
+- Mỗi peer duy trì cơ sở dữ liệu người dùng riêng (người dùng không được chia sẻ giữa các peer)
+- Thông tin đăng nhập Basic Auth phải được cung cấp với mỗi lần gọi API đến các endpoint được bảo vệ
