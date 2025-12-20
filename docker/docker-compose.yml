@@ -1,29 +1,14 @@
-<<<<<<< HEAD
-version: "3.9"
-
-=======
->>>>>>> 5d906bc (Initial commit: BitTorrent-like P2P file sharing core)
 services:
   tracker:
     build:
       context: ..
       dockerfile: docker/Dockerfile
     container_name: bt-tracker
-<<<<<<< HEAD
-    command: ["python", "tracker/tracker.py"]
-    environment:
-      TRACKER_HOST: "0.0.0.0"
-      TRACKER_PORT: "12345"
-      TRACKER_DB_DIR: "tracker_db"
-      TRACKER_TIME_INTERVAL: "22"
-      PYTHONPATH: "/app"
-=======
     command: ["python","tracker/tracker.py"]
     environment:
       TRACKER_PORT: "12345"
       TRACKER_DB_DIR: "/app/tracker_db"
       TRACKER_TTL_SEC: "60"
->>>>>>> 5d906bc (Initial commit: BitTorrent-like P2P file sharing core)
     ports:
       - "12345:12345/udp"
     volumes:
@@ -35,29 +20,19 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
     container_name: bt-peer1
-<<<<<<< HEAD
-    command: ["python", "peer/node.py", "-node_id", "1"]
-=======
-    command: ["python","peer/node.py","-node_id","1"]
->>>>>>> 5d906bc (Initial commit: BitTorrent-like P2P file sharing core)
+    command: ["python","peer/node.py","-node_id","1","-api_port","5000"]
     environment:
       TRACKER_HOST: "tracker"
       TRACKER_PORT: "12345"
       ADVERTISE_HOST: "peer1"
       NODE_PORT: "20001"
-<<<<<<< HEAD
-      NODE_TIME_INTERVAL: "10"
-      SEED_DIR: "node_files"
-      DOWNLOAD_DIR: "downloads"
-      PYTHONPATH: "/app"
-=======
       PIECE_SIZE: "262144"
       BLOCK_SIZE: "8192"
       SEED_DIR: "node_files"
       DOWNLOAD_DIR: "downloads"
->>>>>>> 5d906bc (Initial commit: BitTorrent-like P2P file sharing core)
     ports:
       - "20001:20001/udp"
+      - "5001:5000"  # Flask API port
     volumes:
       - ../data/peer1/node_files:/app/node_files
       - ../data/peer1/downloads:/app/downloads
@@ -71,29 +46,19 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
     container_name: bt-peer2
-<<<<<<< HEAD
-    command: ["python", "peer/node.py", "-node_id", "2"]
-=======
-    command: ["python","peer/node.py","-node_id","2"]
->>>>>>> 5d906bc (Initial commit: BitTorrent-like P2P file sharing core)
+    command: ["python","peer/node.py","-node_id","2","-api_port","5000"]
     environment:
       TRACKER_HOST: "tracker"
       TRACKER_PORT: "12345"
       ADVERTISE_HOST: "peer2"
       NODE_PORT: "20002"
-<<<<<<< HEAD
-      NODE_TIME_INTERVAL: "10"
-      SEED_DIR: "node_files"
-      DOWNLOAD_DIR: "downloads"
-      PYTHONPATH: "/app"
-=======
       PIECE_SIZE: "262144"
       BLOCK_SIZE: "8192"
       SEED_DIR: "node_files"
       DOWNLOAD_DIR: "downloads"
->>>>>>> 5d906bc (Initial commit: BitTorrent-like P2P file sharing core)
     ports:
       - "20002:20002/udp"
+      - "5002:5000"  # Flask API port
     volumes:
       - ../data/peer2/node_files:/app/node_files
       - ../data/peer2/downloads:/app/downloads
@@ -102,14 +67,12 @@ services:
     tty: true
     stdin_open: true
 
-<<<<<<< HEAD
-=======
   peer3:
     build:
       context: ..
       dockerfile: docker/Dockerfile
     container_name: bt-peer3
-    command: ["python","peer/node.py","-node_id","3"]
+    command: ["python","peer/node.py","-node_id","3","-api_port","5000"]
     environment:
       TRACKER_HOST: "tracker"
       TRACKER_PORT: "12345"
@@ -121,6 +84,7 @@ services:
       DOWNLOAD_DIR: "downloads"
     ports:
       - "20003:20003/udp"
+      - "5003:5000"  # Flask API port
     volumes:
       - ../data/peer3/node_files:/app/node_files
       - ../data/peer3/downloads:/app/downloads
@@ -129,7 +93,6 @@ services:
     tty: true
     stdin_open: true
 
->>>>>>> 5d906bc (Initial commit: BitTorrent-like P2P file sharing core)
 networks:
   bt-net:
     driver: bridge
