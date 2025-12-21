@@ -24,7 +24,7 @@ export class HeadersInterceptor implements HttpInterceptor {
       return next.handle(cloned);
     }
     const token = localStorage.getItem("token");
-    var header = "Bearer " + token;
+    var header = "Basic " + token;
     if (token) {
       request = request.clone({
         setHeaders: {

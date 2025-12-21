@@ -69,22 +69,22 @@ export class SidebarComponent implements OnInit {
     },
     {
       header: "",
-      key: "list-file-sharing",
-      path: "/list-file-sharing",
+      key: "uploaded-file",
+      path: "/uploaded-file",
       parent: "",
-      name: "Danh sách File",
+      name: "Uploaded Files",
       icon: "pe-7s-file",
-      children: [
-      ],
+      children: []
     },
     {
       header: "",
-      key: "list-file-download",
-      path: "/list-file-download",
+      key: "list-file-sharing",
+      path: "/available-file-sharing",
       parent: "",
-      name: "Công việc",
+      name: "Available File Sharing",
       icon: "pe-7s-file",
-      children: []
+      children: [
+      ],
     },
   ];
   toggleSidebar() {

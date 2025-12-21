@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { AuthRequestServices } from 'src/app/shared/service/request/auth/auth-request.service';
 import { SpinnerService } from 'src/app/shared/service/spinner.service';
 import { ToastService } from 'src/app/shared/service/toast.service';
+import { ResgiterPopupComponent } from './resgiter/resgiter.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: "app-login",
@@ -18,7 +20,8 @@ export class LoginComponent implements OnInit {
     private fb: NonNullableFormBuilder,
     private apiAuth: AuthRequestServices,
     private spinner: SpinnerService,
-    private toast: ToastService
+    private toast: ToastService,
+    private modalService: NgbModal
   ) {
     this.form = this.fb.group({
       username: [
@@ -44,6 +47,22 @@ export class LoginComponent implements OnInit {
     const payload = {
       ...this.form.value
     }
-    this.router.navigate(["/"]);
+    this.apiAuth.loginV1(payload).then((res: any) => {
+      if(res.ok) {
+        const basicAuth = btoa(`${payload.username}:${payload.password}`);
+        this.toast.success('Login successfull')
+        localStorage.setItem("token", basicAuth);
+        localStorage.setItem("user", JSON.stringify(this.form.value));
+        this.router.navigate(["/"]);
+      }
+    })
+  }
+  openResgiterPopup() {
+    const modal = this.modalService.open(ResgiterPopupComponent, {
+      centered: true,
+      size: "md",
+      backdrop: "static",
+      keyboard: false,
+    });
   }
 }

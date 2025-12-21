@@ -62,6 +62,8 @@ import { DeleteConfirmModalModule } from './Layout/Components/common/delete-cofi
 import { ViewImageModalModule } from './Layout/Components/common/view-image/view-image.component.module';
 import { ConfirmModalModule } from './Layout/Components/common/cofirm-modal/cofirm-modal.module';
 import { NgxSelectModule } from 'ngx-select-ex';
+import { DanhSachFileModule } from './Pages/danh-sach-file/danh-sach-file.module';
+import { ThietBiCuaToiModule } from './Pages/thiet-bi-cua-toi/thiet-bi-cua-toi.module';
 
 @NgModule({
   declarations: [
@@ -125,7 +127,9 @@ import { NgxSelectModule } from 'ngx-select-ex';
     ViewImageModalModule,
     NgbDatepickerModule,
     NgxDaterangepickerBootstrapModule.forRoot(),
-    NgxSelectModule
+    NgxSelectModule,
+    DanhSachFileModule,
+    ThietBiCuaToiModule
   ],
   providers: [
     ConfigService,

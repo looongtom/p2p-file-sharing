@@ -1,0 +1,40 @@
+<div class="bg-white p-4 d-flex flex-column container-body">
+  <div class="d-flex gap-2 mb-4">
+    <button class="btn btn-primary-1" (click)="uploadFile()">
+      <i class="fa-solid fa-plus"></i>
+        Add File
+    </button>
+    <button class="btn btn-outline-secondary">
+      <i class="fa-solid fa-refresh"></i>
+        Rescan All
+    </button>
+  </div>
+  <div class="card card-body d-flex flex-column flex-grow-1 mb-4 overflow-y-auto container-scroll">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col" *ngFor="let header of headers" class="fw-lighter" [style]="header.style">
+            {{ header.name }}
+          </th>
+          <th scope="col" class="fw-lighter" style="width: 150px;">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let item of listDatas; index as i" class="fw-light">
+        <td>{{ i + 1 }}</td>
+        <td>
+          {{item.filename}}
+        </td>
+        <td>{{ item.size }} kb</td>
+        <td>{{ item.peers }}</td>
+        <td>
+          <i class="fa fa-download"></i>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="d-flex justify-content-end">
+    <ngb-pagination class="d-flex justify-content-start" [collectionSize]="totalItems" [page]="page"></ngb-pagination>
+  </div>
+</div>

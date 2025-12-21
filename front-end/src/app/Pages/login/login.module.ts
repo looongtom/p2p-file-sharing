@@ -4,16 +4,19 @@ import { NgModule } from '@angular/core';
 
 import { LoginComponent } from './login.component';
 import { SharedModule } from 'src/app/shared.module';
+import { ResgiterPopupComponent } from './resgiter/resgiter.component';
 
 @NgModule({
   declarations: [
-    LoginComponent
+    LoginComponent,
+    ResgiterPopupComponent
   ],
   imports: [
     SharedModule
   ],
   exports: [
-    LoginComponent
+    LoginComponent,
+    ResgiterPopupComponent
   ]
 })
 export class LoginModule { }

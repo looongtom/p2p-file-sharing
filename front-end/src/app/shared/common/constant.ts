@@ -86,7 +86,7 @@ export const TYPE_TEMPLATE_INT = {
   PROMOTION: 3,
 };
 
-export const API_V1 = "api/v1/"
+export const API_V1 = "api"
 export const ZALO_VER = "v2.0/"
 export const ZALO_VER_03 = "v3.0/"
 export const ZALO_OA = "oa"

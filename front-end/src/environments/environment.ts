@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  BASE_API: "http://103.75.187.109:8088/",
+  BASE_API: "http://127.0.0.1:5001/",
   ZALO_URL_API: "https://openapi.zalo.me/",
 };
 

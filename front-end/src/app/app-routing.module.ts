@@ -48,6 +48,8 @@ import {
   DashboardHomeComponent
 } from './components.barrel';
 import { UserRouteAccessService } from './user-route-access-service';
+import { DanhSachFileComponent } from './Pages/danh-sach-file/danh-sach-file.component';
+import { ThietBiCuaToiComponent } from './Pages/thiet-bi-cua-toi/thiet-bi-cua-toi.component';
 
 const routes: Routes = [
   {
@@ -57,12 +59,23 @@ const routes: Routes = [
   {
     path: "",
     component: BaseLayoutComponent,
+    canActivate: [UserRouteAccessService],
     children: [
       { path: "", redirectTo: "/dashboard", pathMatch: "full" },
       {
         path: "dashboard",
         component: DashboardHomeComponent,
         data: { extraParameter: "dashboard" },
+      },
+      {
+        path: "available-file-sharing",
+        component: DanhSachFileComponent,
+        data: { extraParameter: "" },
+      },
+      {
+        path: "uploaded-file",
+        component: ThietBiCuaToiComponent,
+        data: { extraParameter: "" },
       },
     ],
   },
