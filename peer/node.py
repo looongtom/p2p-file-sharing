@@ -10,6 +10,7 @@ import shutil
 from typing import Dict, Any, Tuple, Optional
 from functools import wraps
 from flask import Flask, request, jsonify, Response
+from flask_cors import CORS
 
 from common.constants import (
     TRACKER_HOST,
@@ -531,6 +532,7 @@ class Node:
         - POST /api/exit - Gracefully exit (requires Basic Auth)
         """
         app = Flask(__name__)
+        CORS(app)  # Enable CORS for all routes
 
         def check_auth(username: str, password: str) -> bool:
             """Check if username and password are valid"""
