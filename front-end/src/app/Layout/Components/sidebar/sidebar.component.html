@@ -1,0 +1,49 @@
+<div [class]="'app-sidebar sidebar-shadow ' + (config$ | async)?.sidebarTheme" 
+     (mouseenter)="onSidebarMouseEnter()"
+     (mouseleave)="onSidebarMouseLeave()">
+  <div class="app-header__logo">
+    <div class="logo-src">
+      <span class="logo-text">
+        <!-- <span class="logo-full">ArchitectUI</span> -->
+         <div class="logo-full">
+          P2P File Sharing
+         </div>
+        <span class="logo-collapsed">P</span>
+      </span>
+    </div>
+  </div>
+  <div class="app-sidebar-content">
+    <div class="app-sidebar-scroll">
+      <div class="sidebar-scrollbar">
+        <div class="v-sidebar-menu vsm-default">
+          <div class="vsm-list">
+            <div *ngFor="let menu of listMenus">
+              <div *ngIf="!menu.children.length" class="vsm-item mb-2" [class.vsm-active]="extraParameter === menu.key">
+                <a [routerLink]="menu.path" routerLinkActive="active-item" class="vsm-link" (click)="onNavigate()">
+                  <i class="vsm-icon" [class]="menu.icon"></i>
+                  <span class="vsm-title">{{menu.name}}</span>
+                </a>
+              </div>
+              <div *ngIf="menu.children.length" class="vsm-item has-sub" [class.vsm-open]="openMenus.includes(menu.key)">
+                <a href="javascript:void(0);" class="vsm-link mb-2" (click)="toggleSubmenu(menu.key)">
+                  <i class="vsm-icon" [class]="menu.icon"></i>
+                  <span class="vsm-title">{{menu.name}}</span>
+                  <i class="vsm-arrow"></i>
+                </a>
+                <div class="vsm-dropdown" [class.vsm-dropdown-show]="openMenus.includes(menu.key)">
+                  <div class="vsm-list">
+                    <div *ngFor="let item of menu.children" class="vsm-item mb-2">
+                      <a [routerLink]="item.path" routerLinkActive="active-item" class="vsm-link" (click)="onNavigate()">
+                        <span class="vsm-title">{{item.name}}</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

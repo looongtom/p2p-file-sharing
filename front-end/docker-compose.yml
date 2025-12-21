@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  angular:
+    image: angular-dev
+    build: .
+    ports:
+      - "4300:4200"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm start -- --host 0.0.0.0

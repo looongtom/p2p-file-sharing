@@ -1,0 +1,12 @@
+<div class="modal-header bg-success">
+  <h4 class="modal-title text-white">Xác nhận! </h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="closeModal(false)">
+  </button>
+</div>
+<div class="modal-body">
+  {{title ? title : 'Xác nhận thực hiện thao tác?'}}
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="closeModal(false)">Hủy</button>
+  <button type="button" class="btn btn-success" (click)="closeModal(true)">Xác nhận</button>
+</div>

@@ -92,6 +92,22 @@ services:
     networks: [bt-net]
     tty: true
     stdin_open: true
+  frontend:
+    container_name: bt-frontend
+    build:
+      context: ../front-end
+      dockerfile: Dockerfile
+    command: npm start -- --host 0.0.0.0
+    ports:
+      - "4201:4200"   # song song với local 4200
+    volumes:
+      - ../front-end:/app
+      - /app/node_modules
+    networks: [bt-net]
+    depends_on:
+      - peer1
+      - peer2
+      - peer3
 
 networks:
   bt-net:
