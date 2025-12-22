@@ -7,8 +7,18 @@ import { createRequestOption } from '../common/request';
 
 @Injectable({ providedIn: 'root' })
 export class ApiServices {
-  public base_url = environment.BASE_API;
   constructor(protected http: HttpClient) {}
+  private get base_url(): string {
+    const port = window.location.port;
+
+    if (port === '4200') return 'http://127.0.0.1:5001/';
+    if (port === '4201') return 'http://127.0.0.1:5002/';
+    if (port === '4202') return 'http://127.0.0.1:5003/';
+
+    // fallback: dùng environment nếu chạy ngoài 3 port này
+    const url = environment.BASE_API || 'http://127.0.0.1:5001/';
+    return url.endsWith('/') ? url : (url + '/');
+  }
   create(request: any, entity: any): Observable<HttpResponse<any>> {
     return this.http.post<any>(
       this.base_url + request + OPERATIONS.CREATE,
