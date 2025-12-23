@@ -53,7 +53,7 @@ export class LoginComponent implements OnInit {
         this.toast.success('Login successfull')
         localStorage.setItem("token", basicAuth);
         localStorage.setItem("user", JSON.stringify(this.form.value));
-        this.router.navigate(["/"]);
+        this.router.navigate(["/uploaded-file"]);
       }
     })
   }
