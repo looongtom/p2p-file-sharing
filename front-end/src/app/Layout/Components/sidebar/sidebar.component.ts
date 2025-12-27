@@ -59,15 +59,6 @@ export class SidebarComponent implements OnInit {
   activeId = "dashboardsMenu";
   listMenus: any[] = [
     {
-      header: "Dashboard",
-      key: "dashboard",
-      path: "/dashboard",
-      parent: "",
-      name: "Dashboard",
-      icon: "pe-7s-graph2",
-      children: [],
-    },
-    {
       header: "",
       key: "uploaded-file",
       path: "/uploaded-file",

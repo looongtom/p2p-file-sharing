@@ -15,7 +15,7 @@ export class HeaderComponent implements OnInit {
   faEllipsisV = faEllipsisV;
   headerTitle: any;
   public config$: Observable<ConfigState>;
-
+  username: any
   constructor(
     public globals: ThemeOptions,
     private configService: ConfigService,
@@ -23,6 +23,7 @@ export class HeaderComponent implements OnInit {
     private router: Router
   ) {
     this.config$ = this.configService.config$;
+    this.username = localStorage.getItem('username')
   }
 
   @HostBinding("class.isActive")

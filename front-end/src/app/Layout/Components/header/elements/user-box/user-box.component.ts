@@ -19,11 +19,7 @@ export class UserBoxComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const user = JSON.parse(localStorage.getItem("infoUser") || "{}");
-    const userId = user && user.id ? user.id : null;
-    if (userId) {
-      this.getDetailUser(userId);
-    }
+    this.infoUser = localStorage.getItem('username')
   }
   getDetailUser(userId) {
     this.apiUser

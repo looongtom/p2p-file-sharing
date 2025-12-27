@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { FileRequestServices } from "src/app/shared/service/request/file/file-request.service";
 import { ShareService } from "src/app/shared/service/shareService.service";
@@ -10,7 +10,7 @@ import { ToastService } from "src/app/shared/service/toast.service";
   templateUrl: './danh-sach-file.component.html',
   standalone: false,
 })
-export class DanhSachFileComponent implements OnInit {
+export class DanhSachFileComponent implements OnInit, OnDestroy {
   page = 1
   size = 9999
   totalItems = 0
@@ -46,6 +46,7 @@ export class DanhSachFileComponent implements OnInit {
   ];
   listDatas: any[] = [
   ];
+  interval: any
   constructor(
     private modalService: NgbModal,
     public svShare: ShareService,
@@ -56,7 +57,14 @@ export class DanhSachFileComponent implements OnInit {
     
   }
   ngOnInit(): void {
-    this.getListFile()
+    this.interval = setInterval(() => {
+      this.getListFile()
+    }, 5000)
+  }
+  ngOnDestroy(): void {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
   getListFile() {
     this.spinner.show()

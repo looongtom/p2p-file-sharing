@@ -50,10 +50,12 @@ export class LoginComponent implements OnInit {
     this.apiAuth.loginV1(payload).then((res: any) => {
       if(res.ok) {
         const basicAuth = btoa(`${payload.username}:${payload.password}`);
+        console.log('res :>> ', res);
         this.toast.success('Login successfull')
         localStorage.setItem("token", basicAuth);
         localStorage.setItem("user", JSON.stringify(this.form.value));
-        this.router.navigate(["/"]);
+        localStorage.setItem('username', res.username)
+        this.router.navigate(["/uploaded-file"]);
       }
     })
   }
