@@ -249,7 +249,62 @@ curl -u myuser:mypassword123 http://localhost:5001/api/status
 
 ---
 
-### 7. Thoát An toàn
+### 7. Lấy Danh sách Node Đang Kết nối
+
+**GET** `/api/nodes/connected` ⚠️ **Yêu cầu Basic Auth**
+
+Lấy danh sách các node peer đang kết nối và hoạt động. Chỉ trả về các node hiện đang hoạt động (trong thời gian TTL của tracker). Các node đã tắt sẽ tự động bị lọc bỏ.
+
+**Response:**
+```json
+{
+  "ok": true,
+  "connected_nodes": [
+    {
+      "node_id": 2,
+      "host": "peer2",
+      "port": 20001,
+      "swarms": [
+        {
+          "infohash": "a1b2c3d4e5..",
+          "filename": "Xshell5.rar"
+        },
+        {
+          "infohash": "f6g7h8i9j0..",
+          "filename": "TEST.rar"
+        }
+      ]
+    },
+    {
+      "node_id": 3,
+      "host": "peer3",
+      "port": 20001,
+      "swarms": [
+        {
+          "infohash": "a1b2c3d4e5..",
+          "filename": "Xshell5.rar"
+        }
+      ]
+    }
+  ],
+  "count": 2
+}
+```
+
+**Ví dụ:**
+```bash
+curl -u myuser:mypassword123 http://localhost:5001/api/nodes/connected
+```
+
+**Lưu ý:**
+- Chỉ trả về các node đang hoạt động (đã gửi heartbeat trong thời gian TTL)
+- Tự động loại bỏ các node đã tắt hoặc không còn hoạt động
+- Mỗi node có thể tham gia nhiều swarms (chia sẻ nhiều file)
+- Node hiện tại (self) sẽ không xuất hiện trong danh sách
+
+---
+
+### 8. Thoát An toàn
 
 **POST** `/api/exit` ⚠️ **Yêu cầu Basic Auth**
 
@@ -271,7 +326,7 @@ curl -X POST http://localhost:5001/api/exit \
 
 ---
 
-### 8. Kiểm tra Sức khỏe
+### 9. Kiểm tra Sức khỏe
 
 **GET** `/health`
 

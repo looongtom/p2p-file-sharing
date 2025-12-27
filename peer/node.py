@@ -484,6 +484,8 @@ class Node:
             st["total_pieces"] = total_pieces
             st["done"] = int(sum(st["completed"]))
             st["target_dir"] = target_dir  # Ensure target_dir is set
+            # Update peers from tracker to get current active peers
+            st["active_peers"] = peers
             self._log(f"resume found: {filename} done={st['done']}/{total_pieces}")
         else:
             rp, pp = self._resume_paths(filename, target_dir)
@@ -508,6 +510,7 @@ class Node:
 
         with self.dl_lock:
             self.downloads[ih] = st
+            st["active_peers"] = peers
 
         self._log(f"META ok: {filename} size={size} pieces={total_pieces} peers={len(peers)} ih={ih[:10]}..")
 
@@ -874,6 +877,66 @@ class Node:
                 "seeding_count": len(self.seeding),
                 "active_downloads": active_downloads,
                 "downloads_count": len(self.downloads)
+            })
+
+        @app.route('/api/nodes/connected', methods=['GET'])
+        @requires_auth
+        def api_connected_nodes():
+            """Get list of currently active connected peer nodes - requires Basic Auth
+            Only returns nodes that are currently active (within tracker TTL).
+            Nodes that have gone offline will be automatically filtered out.
+            """
+            connected_nodes = {}  # Use dict to deduplicate by (node_id, host, port)
+            
+            # Get all swarms this node is part of (downloads + seeding)
+            with self.dl_lock:
+                active_swarms = set(self.downloads.keys()) | set(self.seeding)
+            
+            # Query tracker for each swarm to get current active peers
+            # The tracker automatically filters out inactive nodes (outside TTL)
+            for ih in active_swarms:
+                try:
+                    resp = self._tracker_need(ih)
+                    if resp.get("ok"):
+                        peers = resp.get("peers", [])
+                        for peer in peers:
+                            # Exclude self
+                            if peer.get("node_id") == self.node_id:
+                                continue
+                            
+                            # Create unique key for deduplication
+                            node_id = peer.get("node_id")
+                            host = peer.get("host")
+                            port = peer.get("port")
+                            key = (node_id, host, port)
+                            
+                            # Only add if not already seen or update with latest info
+                            if key not in connected_nodes:
+                                connected_nodes[key] = {
+                                    "node_id": node_id,
+                                    "host": host,
+                                    "port": port,
+                                    "swarms": []
+                                }
+                            
+                            # Track which swarms this node is in
+                            swarm_info = {
+                                "infohash": ih[:10] + "..",
+                                "filename": resp.get("meta", {}).get("filename", "unknown")
+                            }
+                            if swarm_info not in connected_nodes[key]["swarms"]:
+                                connected_nodes[key]["swarms"].append(swarm_info)
+                except Exception as e:
+                    self._log(f"Error querying tracker for swarm {ih[:10]}..: {e}")
+                    continue
+            
+            # Convert to list format
+            nodes_list = list(connected_nodes.values())
+            
+            return jsonify({
+                "ok": True,
+                "connected_nodes": nodes_list,
+                "count": len(nodes_list)
             })
 
         @app.route('/health', methods=['GET'])
