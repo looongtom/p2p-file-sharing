@@ -12,6 +12,16 @@ export class AuthRequestServices {
   ) {
     
   }
+  private get base_url(): string {
+    const port = window.location.port;
+
+    if (port === '4200') return 'http://127.0.0.1:5001/';
+    if (port === '4201') return 'http://127.0.0.1:5002/';
+    if (port === '4202') return 'http://127.0.0.1:5003/';
+
+    const url = environment.BASE_API || 'http://127.0.0.1:5001/';
+    return url.endsWith('/') ? url : (url + '/');
+  }
   login(payload: any) {
     return new Promise((resolve: any, reject: any) => {
       this.apiService.postOption(API_V1 , payload, '/login').subscribe(
@@ -32,7 +42,7 @@ export class AuthRequestServices {
     });
 
     return this.http.post(
-      environment.BASE_API + API_V1 + '/login',
+      this.base_url + API_V1 + '/login',
       {},
       { headers }
     ).toPromise()

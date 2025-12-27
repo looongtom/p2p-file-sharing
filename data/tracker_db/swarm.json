@@ -1,1 +1,22 @@
-{}
+{
+  "ebdba19514269d8ee8359af9d08b9cae70046812aab4d221c2ab418cabd9f223": {
+    "meta": {
+      "filename": "598255455_5195500127341775_1956484543569734090_n.jpg",
+      "size": 203245,
+      "piece_size": 262144,
+      "piece_hashes": [
+        "fca59f733f08ddf41c502f9dc51f7f8cae833d6da43c52ce8165f6d4e4179a5e"
+      ]
+    },
+    "owners": [
+      {
+        "node_id": 1,
+        "host": "peer1",
+        "port": 20001
+      }
+    ],
+    "last_seen": {
+      "1": 1766456853.3544633
+    }
+  }
+}
