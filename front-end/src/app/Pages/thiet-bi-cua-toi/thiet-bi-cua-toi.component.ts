@@ -37,12 +37,6 @@ export class ThietBiCuaToiComponent implements OnInit {
       class: "",
       style: "width: 150px; max-width: 200px",
     },
-    {
-      name: "Number of Seeds",
-      key: "companyName",
-      class: "",
-      style: "width: 100px",
-    },
   ];
   listDatas: any[] = [
   ];
@@ -60,14 +54,11 @@ export class ThietBiCuaToiComponent implements OnInit {
   }
   getListFile() {
     this.spinner.show()
-    this.fileRequestService.get().then((res: any) => {
-      if(res.status === 200) {
-        this.listDatas = res.body.items
-      }
-    })
-    .finally(() => {
-      this.spinner.hide()
-    })
+    const data = localStorage.getItem('listFiles')
+    if(data) {
+      this.listDatas = JSON.parse(data)
+    }
+    this.spinner.hide()
   }
   uploadFile() {
     const input = document.createElement('input')
@@ -80,9 +71,12 @@ export class ThietBiCuaToiComponent implements OnInit {
       this.spinner.show()
       this.fileRequestService.upload(formData).then((res: any) => {
         if(res.status === 200) {
-          console.log('res :>> ', res);
           this.toast.success(res.body.message || 'Upload file successfully')
-          this.getListFile()
+          this.listDatas.push({
+            filename: file.name,
+            size: file.size,
+          })
+          localStorage.setItem('listFiles', JSON.stringify(this.listDatas))
         } else {
           this.toast.error('Upload file failed')
         }

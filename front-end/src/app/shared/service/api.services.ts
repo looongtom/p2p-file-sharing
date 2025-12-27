@@ -10,13 +10,43 @@ export class ApiServices {
   constructor(protected http: HttpClient) {}
   private get base_url(): string {
     const port = window.location.port;
-
-    if (port === '4200') return 'http://127.0.0.1:5001/';
-    if (port === '4201') return 'http://127.0.0.1:5002/';
-    if (port === '4202') return 'http://127.0.0.1:5003/';
-
-    const url = environment.BASE_API || 'http://127.0.0.1:5001/';
-    return url.endsWith('/') ? url : (url + '/');
+    switch (port) {
+      case '4200':
+        return 'http://127.0.0.1:5001/';
+      case '4201':
+        return 'http://127.0.0.1:5002/';
+      case '4202':
+        return 'http://127.0.0.1:5003/';
+      case '4203':
+        return 'http://127.0.0.1:5004/';
+      case '4204':
+        return 'http://127.0.0.1:5005/';
+      case '4205':
+        return 'http://127.0.0.1:5006/';
+      case '4206':
+        return 'http://127.0.0.1:5007/';
+      case '4207':
+        return 'http://127.0.0.1:5008/';
+      case '4208':
+        return 'http://127.0.0.1:5009/';
+      case '4209':
+        return 'http://127.0.0.1:5010/';
+      case '4210':
+        return 'http://127.0.0.1:5011/';
+      case '4211':
+        return 'http://127.0.0.1:5012/';
+      case '4212':
+        return 'http://127.0.0.1:5013/';
+      case '4213':
+        return 'http://127.0.0.1:5014/';
+      case '4214':
+        return 'http://127.0.0.1:5015/';
+      case '4215':
+        return 'http://127.0.0.1:5016/';
+      
+      default:
+        return 'http://127.0.0.1:5001/';
+    }
   }
   create(request: any, entity: any): Observable<HttpResponse<any>> {
     return this.http.post<any>(

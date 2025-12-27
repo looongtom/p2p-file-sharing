@@ -1,7 +1,8 @@
 <div class="header-btn-lg d-flex align-items-center">
   <div class="widget-content-left me-2">
-    <div class="widget-heading">ABC</div>
-    <div class="widget-subheading">Admin</div>
+    <div class="widget-heading">{{infoUser}}</div>
+
+
   </div>
   <div ngbDropdown placement="bottom-right">
     <button style="width: 42px; height: 42px;" type="button" class="btn btn-link p-0" ngbDropdownToggle>
@@ -14,8 +15,7 @@
             <img src="/assets/images/avatars/1.jpg" alt="Avatar" class="rounded-circle mb-2" style="width: 100%; height: 100%; object-fit: cover;">
           </div>
         </div>
-        <h6 class="mb-0">{{infoUser ? infoUser.fullName : ''}}</h6>
-        <small class="text-muted">{{infoUser ? infoUser.email : ''}}</small>
+        <h6 class="mb-0">{{infoUser}}</h6>
       </div>
       <!-- <div href="https://thienphat-checkin.store" class="dropdown-item" style="cursor: pointer;">
         <a rel="stylesheet" href="https://thienphat-checkin.store" target="_blank"> <i class="pe-7s-bell me-2"></i> Chấm công</a>
@@ -46,7 +46,7 @@
       </a> -->
       <a href="login" class="dropdown-item text-danger">
         <i class="pe-7s-power me-2"></i>
-        Đăng xuất
+        Logout
       </a>
     </div>
   </div>
