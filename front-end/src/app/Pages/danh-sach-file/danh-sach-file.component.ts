@@ -57,6 +57,7 @@ export class DanhSachFileComponent implements OnInit, OnDestroy {
     
   }
   ngOnInit(): void {
+    this.getListFile()
     this.interval = setInterval(() => {
       this.getListFile()
     }, 5000)
