@@ -808,20 +808,59 @@ class Node:
         @app.route('/api/torrent/list', methods=['GET'])
         @requires_auth
         def api_list():
-            """List all files available on tracker - requires Basic Auth"""
-            resp = self._tracker_list()
-            if not resp.get("ok"):
-                return jsonify({"ok": False, "error": "tracker list failed"}), 500
-            
-            items = resp.get("items", [])
+            """List all files in local node_files directory - requires Basic Auth"""
+            seed_dir_path = os.path.join("/app", self.seed_dir)
             formatted_items = []
-            for it in items:
-                formatted_items.append({
-                    "filename": it.get('filename'),
-                    "size": it.get('size'),
-                    "peers": it.get('peers'),
-                    "infohash": str(it.get('infohash', ''))[:10] + ".."
+            
+            if not os.path.exists(seed_dir_path):
+                return jsonify({
+                    "ok": True,
+                    "items": [],
+                    "count": 0,
+                    "message": f"Directory {seed_dir_path} does not exist"
                 })
+            
+            try:
+                # List all files in node_files directory
+                for filename in os.listdir(seed_dir_path):
+                    file_path = os.path.join(seed_dir_path, filename)
+                    
+                    # Skip if not a file, or if it's a temporary/resume file
+                    if not os.path.isfile(file_path):
+                        continue
+                    if filename.endswith(('.part', '.resume.json')):
+                        continue
+                    
+                    try:
+                        # Get file size
+                        file_size = os.path.getsize(file_path)
+                        
+                        # Try to get infohash and metadata if possible
+                        infohash = None
+                        try:
+                            ih, meta = self._build_meta(file_path)
+                            infohash = ih[:10] + ".."
+                        except Exception as e:
+                            # If building metadata fails (e.g., file too large), just skip infohash
+                            self._log(f"Could not build metadata for {filename}: {e}")
+                        
+                        formatted_items.append({
+                            "filename": filename,
+                            "size": file_size,
+                            "infohash": infohash,
+                            "is_local": True
+                        })
+                    except OSError as e:
+                        # Skip files that can't be accessed
+                        self._log(f"Error accessing file {filename}: {e}")
+                        continue
+                
+                # Sort by filename for consistent ordering
+                formatted_items.sort(key=lambda x: x.get('filename', ''))
+                
+            except Exception as e:
+                self._log(f"Error listing files from {seed_dir_path}: {e}")
+                return jsonify({"ok": False, "error": f"Failed to list files: {str(e)}"}), 500
             
             return jsonify({
                 "ok": True,
