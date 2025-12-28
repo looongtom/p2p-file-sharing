@@ -64,6 +64,7 @@ class Node:
 
         threading.Thread(target=self._recv_loop, daemon=True).start()
         threading.Thread(target=self._heartbeat_loop, daemon=True).start()
+        threading.Thread(target=self._sync_node_files_loop, daemon=True).start()
 
     def _log(self, msg: str) -> None:
         ts = time.strftime("%Y-%m-%dT%H:%M:%S")
@@ -119,7 +120,17 @@ class Node:
 
     # ---------------- Tracker calls ----------------
     def _send_tracker(self, msg: Dict[str, Any]) -> None:
-        self.sock.sendto(jencode(msg), self.tracker)
+        encoded = jencode(msg)
+        msg_size = len(encoded)
+        if msg_size > BUFFER_SIZE:
+            self._log(f"WARNING: Message size {msg_size} exceeds BUFFER_SIZE {BUFFER_SIZE}, may fail")
+        try:
+            self.sock.sendto(encoded, self.tracker)
+        except OSError as e:
+            if e.errno == 90:  # Message too long
+                self._log(f"ERROR: Message too long ({msg_size} bytes) to send to tracker. File metadata too large.")
+                raise
+            raise
 
     def _tracker_call(self, req: Dict[str, Any]) -> Dict[str, Any]:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -177,9 +188,9 @@ class Node:
             self._log(f"File not found (seed): {path}")
             return False
 
-        ih, meta = self._build_meta(path)
-        self._send_tracker(
-            {
+        try:
+            ih, meta = self._build_meta(path)
+            msg = {
                 "mode": MODE_OWN,
                 "node_id": self.node_id,
                 "host": ADVERTISE_HOST,
@@ -187,15 +198,28 @@ class Node:
                 "infohash": ih,
                 "meta": meta,
             }
-        )
-        self.seeding.add(ih)
-        self._log(f"OWN announced: {filename} ih={ih[:10]}.. size={meta['size']} pieces={len(meta['piece_hashes'])}")
-        return True
+            # Check message size before sending
+            encoded = jencode(msg)
+            if len(encoded) > BUFFER_SIZE:
+                self._log(f"OWN skipped: {filename} metadata too large ({len(encoded)} bytes, max {BUFFER_SIZE}). File has {len(meta['piece_hashes'])} pieces.")
+                return False
+            
+            self._send_tracker(msg)
+            self.seeding.add(ih)
+            self._log(f"OWN announced: {filename} ih={ih[:10]}.. size={meta['size']} pieces={len(meta['piece_hashes'])}")
+            return True
+        except OSError as e:
+            if e.errno == 90:  # Message too long
+                self._log(f"OWN failed: {filename} - Message too long. File metadata exceeds UDP limit.")
+                return False
+            raise
 
     # ---------------- Resume helpers ----------------
-    def _resume_paths(self, filename: str) -> Tuple[str, str]:
-        rp = os.path.join("/app", self.download_dir, f"{filename}.resume.json")
-        pp = os.path.join("/app", self.download_dir, f"{filename}.part")
+    def _resume_paths(self, filename: str, target_dir: Optional[str] = None) -> Tuple[str, str]:
+        if target_dir is None:
+            target_dir = self.download_dir
+        rp = os.path.join("/app", target_dir, f"{filename}.resume.json")
+        pp = os.path.join("/app", target_dir, f"{filename}.part")
         return rp, pp
 
     def _save_resume(self, st: Dict[str, Any]) -> None:
@@ -219,8 +243,8 @@ class Node:
             json.dump(safe, fp, ensure_ascii=False, indent=2)
         os.replace(tmp, rp)
 
-    def _load_resume(self, filename: str) -> Optional[Dict[str, Any]]:
-        rp, pp = self._resume_paths(filename)
+    def _load_resume(self, filename: str, target_dir: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        rp, pp = self._resume_paths(filename, target_dir)
         if not os.path.exists(rp):
             return None
         with open(rp, "r", encoding="utf-8") as fp:
@@ -228,6 +252,8 @@ class Node:
         st["resume_path"] = rp
         st["part_path"] = pp
         st["buffers"] = {}
+        if target_dir:
+            st["target_dir"] = target_dir
         return st
 
     def _ensure_partfile(self, part_path: str, total_size: int) -> None:
@@ -241,8 +267,10 @@ class Node:
             fp.seek(idx * st["piece_size"])
             fp.write(data)
 
-    def _finalize(self, st: Dict[str, Any]) -> None:
-        out = os.path.join("/app", self.download_dir, st["filename"])
+    def _finalize(self, st: Dict[str, Any], target_dir: Optional[str] = None) -> None:
+        if target_dir is None:
+            target_dir = self.download_dir
+        out = os.path.join("/app", target_dir, st["filename"])
         with open(st["part_path"], "rb+") as fp:
             fp.truncate(st["size"])
         os.replace(st["part_path"], out)
@@ -430,7 +458,7 @@ class Node:
             q.task_done()
 
     # ---------------- Download ----------------
-    def download_by_infohash(self, ih: str) -> None:
+    def download_by_infohash(self, ih: str, target_dir: Optional[str] = None) -> None:
         resp = self._tracker_need(ih)
         if not resp.get("ok"):
             self._log(f"tracker says NOT_FOUND ih={ih[:10]}..")
@@ -447,14 +475,20 @@ class Node:
         piece_hashes = meta["piece_hashes"]
         total_pieces = len(piece_hashes)
 
-        st = self._load_resume(filename)
+        if target_dir is None:
+            target_dir = self.download_dir
+
+        st = self._load_resume(filename, target_dir)
         if st and st.get("infohash") == ih and st.get("piece_size") == PIECE_SIZE:
             st["piece_hashes"] = piece_hashes
             st["total_pieces"] = total_pieces
             st["done"] = int(sum(st["completed"]))
+            st["target_dir"] = target_dir  # Ensure target_dir is set
+            # Update peers from tracker to get current active peers
+            st["active_peers"] = peers
             self._log(f"resume found: {filename} done={st['done']}/{total_pieces}")
         else:
-            rp, pp = self._resume_paths(filename)
+            rp, pp = self._resume_paths(filename, target_dir)
             st = {
                 "infohash": ih,
                 "filename": filename,
@@ -467,6 +501,7 @@ class Node:
                 "resume_path": rp,
                 "part_path": pp,
                 "buffers": {},
+                "target_dir": target_dir,
             }
             self._ensure_partfile(pp, size)
             self._save_resume(st)
@@ -475,11 +510,15 @@ class Node:
 
         with self.dl_lock:
             self.downloads[ih] = st
+            st["active_peers"] = peers
 
         self._log(f"META ok: {filename} size={size} pieces={total_pieces} peers={len(peers)} ih={ih[:10]}..")
 
         if st["done"] >= total_pieces:
-            self._finalize(st)
+            self._finalize(st, target_dir)
+            if target_dir == self.seed_dir:
+                # Auto-register with tracker after downloading to seed_dir
+                self.own_file(filename)
             return
 
         import queue
@@ -498,14 +537,18 @@ class Node:
         with self.dl_lock:
             st2 = self.downloads.get(ih)
             if st2 and int(sum(st2["completed"])) == total_pieces:
-                self._finalize(st2)
+                final_target_dir = st2.get("target_dir", target_dir)
+                self._finalize(st2, final_target_dir)
+                if final_target_dir == self.seed_dir:
+                    # Auto-register with tracker after downloading to seed_dir
+                    self.own_file(filename)
             else:
                 missing = 0
                 if st2:
                     missing = st2["total_pieces"] - int(sum(st2["completed"]))
                 self._log(f"download finished but missing {missing} pieces (will resume on next run)")
 
-    def download_by_filename(self, filename: str) -> None:
+    def download_by_filename(self, filename: str, target_dir: Optional[str] = None) -> None:
         resp = self._tracker_find_by_name(filename)
         if not resp.get("ok"):
             err = resp.get("error")
@@ -517,7 +560,114 @@ class Node:
                 self._log(f"File not found on tracker: {filename}")
             return
         ih = resp["match"]["infohash"]
-        self.download_by_infohash(ih)
+        self.download_by_infohash(ih, target_dir)
+
+    # ---------------- File Synchronization ----------------
+    def _sync_file_to_dir(self, filename: str, target_dir: str) -> bool:
+        """
+        General function to sync a file to a specified directory.
+        Downloads the file if it doesn't exist in the target directory.
+        Starts download in a separate thread to avoid blocking.
+        Returns True if file exists or download started, False otherwise.
+        """
+        target_path = os.path.join("/app", target_dir, filename)
+        
+        # Check if file already exists and is complete
+        if os.path.exists(target_path):
+            try:
+                # Verify file is complete by checking size matches tracker
+                resp = self._tracker_find_by_name(filename)
+                if resp.get("ok"):
+                    expected_size = resp["match"].get("size")
+                    actual_size = os.path.getsize(target_path)
+                    if expected_size == actual_size:
+                        return True
+            except Exception:
+                pass
+        
+        # Check if already downloading this file to this directory
+        with self.dl_lock:
+            already_downloading = False
+            for ih, st in self.downloads.items():
+                if st.get("filename") == filename and st.get("target_dir") == target_dir:
+                    already_downloading = True
+                    break
+        
+        if already_downloading:
+            return True  # Download in progress
+        
+        # File doesn't exist or size mismatch, start download in background
+        try:
+            self._log(f"SYNC: Starting download of {filename} to {target_dir}")
+            threading.Thread(
+                target=self.download_by_filename,
+                args=(filename, target_dir),
+                daemon=True
+            ).start()
+            return True
+        except Exception as e:
+            self._log(f"SYNC: Error starting sync of {filename} to {target_dir}: {e}")
+            return False
+
+    def _sync_node_files_loop(self) -> None:
+        """
+        Background thread that syncs node_files directory every 5 seconds.
+        Implements bidirectional sync:
+        - Pull: Download files from other nodes if missing
+        - Push: Register local files with tracker
+        """
+        SYNC_INTERVAL = 5  # seconds
+        
+        while True:
+            try:
+                time.sleep(SYNC_INTERVAL)
+                
+                # Get list of files from tracker
+                resp = self._tracker_list()
+                if not resp.get("ok"):
+                    continue
+                
+                tracker_files = {}
+                for item in resp.get("items", []):
+                    filename = item.get("filename")
+                    if filename:
+                        tracker_files[filename] = item
+                
+                # PULL: Download missing files from other nodes
+                seed_dir_path = os.path.join("/app", self.seed_dir)
+                os.makedirs(seed_dir_path, exist_ok=True)
+                
+                local_files = set()
+                if os.path.exists(seed_dir_path):
+                    for fn in os.listdir(seed_dir_path):
+                        fp = os.path.join(seed_dir_path, fn)
+                        if os.path.isfile(fp) and not fn.endswith(('.part', '.resume.json')):
+                            local_files.add(fn)
+                
+                # Download files that exist on tracker but not locally
+                for filename in tracker_files:
+                    if filename not in local_files:
+                        self._sync_file_to_dir(filename, self.seed_dir)
+                
+                # PUSH: Register local files with tracker
+                for filename in local_files:
+                    file_path = os.path.join(seed_dir_path, filename)
+                    if not os.path.isfile(file_path):
+                        continue
+                    
+                    # Check if file is already registered
+                    try:
+                        ih, meta = self._build_meta(file_path)
+                        if ih not in self.seeding:
+                            # File exists locally but not registered, register it
+                            self.own_file(filename)
+                    except Exception as e:
+                        self._log(f"SYNC: Error registering {filename}: {e}")
+                        continue
+                
+            except Exception as e:
+                self._log(f"SYNC: Error in sync loop: {e}")
+                continue
 
     # ---------------- API Server ----------------
     def start_api(self, api_port: int = 5000) -> None:
@@ -568,8 +718,8 @@ class Node:
             if len(username) < 3:
                 return jsonify({"ok": False, "error": "username must be at least 3 characters"}), 400
             
-            if len(password) < 6:
-                return jsonify({"ok": False, "error": "password must be at least 6 characters"}), 400
+            # if len(password) < 6:
+            #     return jsonify({"ok": False, "error": "password must be at least 6 characters"}), 400
             
             success = self._register_user(username, password)
             if success:
@@ -727,6 +877,66 @@ class Node:
                 "seeding_count": len(self.seeding),
                 "active_downloads": active_downloads,
                 "downloads_count": len(self.downloads)
+            })
+
+        @app.route('/api/nodes/connected', methods=['GET'])
+        @requires_auth
+        def api_connected_nodes():
+            """Get list of currently active connected peer nodes - requires Basic Auth
+            Only returns nodes that are currently active (within tracker TTL).
+            Nodes that have gone offline will be automatically filtered out.
+            """
+            connected_nodes = {}  # Use dict to deduplicate by (node_id, host, port)
+            
+            # Get all swarms this node is part of (downloads + seeding)
+            with self.dl_lock:
+                active_swarms = set(self.downloads.keys()) | set(self.seeding)
+            
+            # Query tracker for each swarm to get current active peers
+            # The tracker automatically filters out inactive nodes (outside TTL)
+            for ih in active_swarms:
+                try:
+                    resp = self._tracker_need(ih)
+                    if resp.get("ok"):
+                        peers = resp.get("peers", [])
+                        for peer in peers:
+                            # Exclude self
+                            if peer.get("node_id") == self.node_id:
+                                continue
+                            
+                            # Create unique key for deduplication
+                            node_id = peer.get("node_id")
+                            host = peer.get("host")
+                            port = peer.get("port")
+                            key = (node_id, host, port)
+                            
+                            # Only add if not already seen or update with latest info
+                            if key not in connected_nodes:
+                                connected_nodes[key] = {
+                                    "node_id": node_id,
+                                    "host": host,
+                                    "port": port,
+                                    "swarms": []
+                                }
+                            
+                            # Track which swarms this node is in
+                            swarm_info = {
+                                "infohash": ih[:10] + "..",
+                                "filename": resp.get("meta", {}).get("filename", "unknown")
+                            }
+                            if swarm_info not in connected_nodes[key]["swarms"]:
+                                connected_nodes[key]["swarms"].append(swarm_info)
+                except Exception as e:
+                    self._log(f"Error querying tracker for swarm {ih[:10]}..: {e}")
+                    continue
+            
+            # Convert to list format
+            nodes_list = list(connected_nodes.values())
+            
+            return jsonify({
+                "ok": True,
+                "connected_nodes": nodes_list,
+                "count": len(nodes_list)
             })
 
         @app.route('/health', methods=['GET'])

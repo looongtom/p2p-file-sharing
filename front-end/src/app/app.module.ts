@@ -21,14 +21,6 @@ import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 // Feature Modules
-import { FormPagesModule } from './forms.module';
-import { TablesModule } from './tables.module';
-import { WidgetsModule } from './widgets.module';
-import { ComponentsModule } from './components.module';
-import { DashboardsModule } from './dashboards.module';
-import { ElementsModule } from './elements.module';
-import { UserPagesModule } from './user-pages.module';
-import { ChartsModule } from './charts.module';
 import { SharedModule } from './shared.module';
 
 // LAYOUT
@@ -109,14 +101,6 @@ import { ThietBiCuaToiModule } from './Pages/thiet-bi-cua-toi/thiet-bi-cua-toi.m
 
     // Feature Modules
     SharedModule,
-    DashboardsModule,
-    ElementsModule,
-    UserPagesModule,
-    ChartsModule, // Re-enabled - ng2-charts v6 compatibility confirmed
-    FormPagesModule,
-    TablesModule,
-    WidgetsModule,
-    ComponentsModule,
     // Custome Module
     LoginModule,
     DashboardHomeModule,
