@@ -13,6 +13,7 @@ import {
 import { UserRouteAccessService } from './user-route-access-service';
 import { DanhSachFileComponent } from './Pages/danh-sach-file/danh-sach-file.component';
 import { ThietBiCuaToiComponent } from './Pages/thiet-bi-cua-toi/thiet-bi-cua-toi.component';
+import { QuanLiNodeComponent } from './Pages/quan-li-node/quan-li-node.component';
 
 const routes: Routes = [
   {
@@ -24,12 +25,7 @@ const routes: Routes = [
     component: BaseLayoutComponent,
     canActivate: [UserRouteAccessService],
     children: [
-      { path: "", redirectTo: "/dashboard", pathMatch: "full" },
-      {
-        path: "dashboard",
-        component: DashboardHomeComponent,
-        data: { extraParameter: "dashboard" },
-      },
+      { path: "", redirectTo: "/available-file-sharing", pathMatch: "full" },
       {
         path: "available-file-sharing",
         component: DanhSachFileComponent,
@@ -38,6 +34,11 @@ const routes: Routes = [
       {
         path: "uploaded-file",
         component: ThietBiCuaToiComponent,
+        data: { extraParameter: "" },
+      },
+      {
+        path: "nodes",
+        component: QuanLiNodeComponent,
         data: { extraParameter: "" },
       },
     ],

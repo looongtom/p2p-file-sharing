@@ -56,6 +56,7 @@ import { ConfirmModalModule } from './Layout/Components/common/cofirm-modal/cofi
 import { NgxSelectModule } from 'ngx-select-ex';
 import { DanhSachFileModule } from './Pages/danh-sach-file/danh-sach-file.module';
 import { ThietBiCuaToiModule } from './Pages/thiet-bi-cua-toi/thiet-bi-cua-toi.module';
+import { QuanLiNodeModule } from './Pages/quan-li-node/quan-li-node.component.module';
 
 @NgModule({
   declarations: [
@@ -113,7 +114,8 @@ import { ThietBiCuaToiModule } from './Pages/thiet-bi-cua-toi/thiet-bi-cua-toi.m
     NgxDaterangepickerBootstrapModule.forRoot(),
     NgxSelectModule,
     DanhSachFileModule,
-    ThietBiCuaToiModule
+    ThietBiCuaToiModule,
+    QuanLiNodeModule
   ],
   providers: [
     ConfigService,

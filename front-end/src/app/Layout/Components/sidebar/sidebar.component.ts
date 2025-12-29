@@ -77,6 +77,16 @@ export class SidebarComponent implements OnInit {
       children: [
       ],
     },
+    {
+      header: "",
+      key: "nodes",
+      path: "/nodes",
+      parent: "",
+      name: "Nodes",
+      icon: "pe-7s-file",
+      children: [
+      ],
+    }
   ];
   toggleSidebar() {
     this.globals.toggleSidebar = !this.globals.toggleSidebar;
